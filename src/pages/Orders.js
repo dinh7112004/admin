@@ -4,18 +4,27 @@ import { BASE_URL } from '../config';
 import { useAdminAuth } from '../../src/contexts/AdminAuthContext';
 import './StyleWeb/OrderList.css';
 import { Link } from 'react-router-dom';
-
+import { calculateOrderTotal } from '../utils/orderUtils';
 
 const statusMap = {
   pending: 'Chờ xác nhận',
+  payment_verified: 'Đã xác nhận thanh toán',
   confirmed: 'Đã xác nhận',
-  processing: 'Đang lấy hàng',
-  shipping: 'Đang giao hàng',
+  processing: 'Đang xử lý',
+  packing: 'Đang đóng gói',
+  ready_to_ship: 'Sẵn sàng giao',
+  picked_up: 'Đã lấy hàng',
+  in_transit: 'Đang vận chuyển',
+  out_for_delivery: 'Đang giao hàng',
   delivered: 'Đã giao hàng',
-  cancelled: 'Đã huỷ',
+  completed: 'Hoàn thành',
+  return_requested: 'Yêu cầu trả hàng',
+  returning: 'Đang trả hàng',
+  returned: 'Đã trả hàng',
+  refund_pending: 'Chờ hoàn tiền',
+  refunded: 'Đã hoàn tiền',
+  cancelled: 'Đã hủy đơn',
 };
-
-
 
 export default function OrderList() {
   const { adminToken } = useAdminAuth();
@@ -41,7 +50,7 @@ export default function OrderList() {
           sort: sortOrder,
         },
       });
-      setOrders(res.data);
+      setOrders(res.data.data);
     } catch (err) {
       console.error('Lỗi khi tải đơn hàng:', err);
     } finally {
@@ -62,11 +71,22 @@ export default function OrderList() {
             <select value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
               <option value="">Tất cả trạng thái</option>
               <option value="pending">Chờ xác nhận</option>
+              <option value="payment_verified">Đã xác nhận thanh toán</option>
               <option value="confirmed">Đã xác nhận</option>
-              <option value="processing">Đang lấy hàng</option>
-              <option value="shipping">Đang giao hàng</option>
+              <option value="processing">Đang xử lý</option>
+              <option value="packing">Đang đóng gói</option>
+              <option value="ready_to_ship">Sẵn sàng giao</option>
+              <option value="picked_up">Đã lấy hàng</option>
+              <option value="in_transit">Đang vận chuyển</option>
+              <option value="out_for_delivery">Đang giao hàng</option>
               <option value="delivered">Đã giao hàng</option>
-              <option value="cancelled">Đã huỷ</option>
+              <option value="completed">Hoàn thành</option>
+              <option value="return_requested">Yêu cầu trả hàng</option>
+              <option value="returning">Đang trả hàng</option>
+              <option value="returned">Đã trả hàng</option>
+              <option value="refund_pending">Chờ hoàn tiền</option>
+              <option value="refunded">Đã hoàn tiền</option>
+              <option value="cancelled">Đã hủy</option>
             </select>
 
             <select value={sortOrder} onChange={(e) => setSortOrder(e.target.value)}>
@@ -108,7 +128,7 @@ export default function OrderList() {
                         {order.order_code || `#${order._id.slice(-6).toUpperCase()}`}
                       </td>
                       <td>{order.user_id?.full_name || 'Ẩn danh'}</td>
-                      <td>{order.total_amount?.toLocaleString()} VND</td>
+                      <td>{calculateOrderTotal(order).toLocaleString()} VND</td>
                       <td>
                         <span className={`status-label status-${order.status}`}>
                           {statusMap[order.status] || 'Không rõ'}
@@ -124,7 +144,6 @@ export default function OrderList() {
                         <Link to={`/admin/orders/${order._id}`} className="order-action-btn">
                           Chi tiết
                         </Link>
-
                       </td>
                     </tr>
                   ))
